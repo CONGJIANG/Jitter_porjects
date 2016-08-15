@@ -1,0 +1,154 @@
+clear all;
+duration = 1000; %in(ms)
+dt = 0.1;        %in(ms)
+time = 0:dt:duration;
+interval = 50;  %in (ms)
+
+rate_ref = 50*.001; %average firing rate of the reference train in (1/ms)
+rate_max = 10*rate_ref; %maximal firing rate in HZ
+rate_min = rate_ref/10; 
+nb_cycle = duration/10;
+
+clear pval
+rate = (rate_max-rate_min)*(sin(pi*time/interval)+1)/2+rate_min;
+rate0 = max(rate);
+p = rate/rate0;
+
+homo_rate = rate_max*ones(1,length(time));
+homo_rate0 = max(homo_rate);
+p = homo_rate/homo_rate0;
+
+for L = 1:1000
+x = [0];
+xref = [0];
+%generation of an inhomogeneous Poisson Process
+while x(end) <= duration;
+    u = abs((-1)+1*rand(1,1));
+    x = [x,x(end)-log(u)/rate0];
+    U = abs((-1)+1*rand(1,1));
+    ix = max(find(time <= x(end)));
+    if (U <= p(ix))&& (x(end) < duration) 
+        xref = [xref,x(end)];
+        xref = xref(1:end);
+    end
+end
+sqc = [];
+count_up = [];
+count_down = [];
+nb_interval = round(duration/interval);
+for k = 1:nb_interval
+    ind = find(((k-1)*interval <= xref).*(xref < k*interval));
+    if k/2-round(k/2) == 0
+        %'a',length(ind)
+        count_up = [count_up; length(ind)];
+    else
+        %'b',length(ind)
+        count_down = [count_down; length(ind)];
+    end
+end
+
+sqc = [];
+theta = (max(count_up)+min(count_down))/2;
+nb_interval = round(duration/interval);
+for k = 1:nb_interval
+    ind = find(((k-1)*interval <= xref).*(xref < k*interval));
+    if length(ind) >= theta
+        sqc = [sqc, 1];
+    else
+        sqc = [sqc, 0];
+    end    
+end
+sqc;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%homogeous series
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+x = [0];
+xref = [0];
+%generation of an homogeneous Poisson Process
+while x(end) <= duration;
+    u = abs((-1)+1*rand(1,1));
+    x = [x,x(end)-log(u)/homo_rate0];
+    U = abs((-1)+1*rand(1,1));
+    ix = max(find(time <= x(end)));
+    if (U <= p(ix))&& (x(end) < duration) 
+        xref = [xref,x(end)];
+        xref = xref(1:end);
+    end
+end
+count = [];
+nb_interval = round(duration/interval);
+for k = 1:nb_interval
+    ind = find(((k-1)*interval <= xref).*(xref < k*interval));
+    count = [count; length(ind)];
+end
+sqc_homo = [];
+theta = max(count);
+nb_interval = round(duration/interval);
+for k = 1:nb_interval
+    ind = find(((k-1)*interval <= xref).*(xref < k*interval));
+    if length(ind) >= theta
+        sqc_homo = [sqc_homo, 1];
+    else
+        sqc_homo = [sqc_homo, 0];
+    end    
+end
+sqc_homo;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%compute the P-value
+s_0=0;
+indices = find(sqc_homo == 1);
+for k = 1:length(indices)
+    if sqc(indices(k)) == 1
+        s_0 = s_0+1;
+    end    
+end    
+
+%for j = 1:length(sqc_homo)
+ %   if sqc_homo(j)==1
+  %      if sqc(j)==1
+   %         s_0=s_0+1;
+    %    end
+%    end   
+% end
+%generate surrogate
+cc=0;
+for K =1:1000
+s=0;
+for j = 1:length(sqc_homo)
+    if sqc_homo(j)==1
+        if (j > 1)*(j < length(sqc_homo)) 
+            b_jitter =j+randi(3,1,1)-2;
+            if sqc(b_jitter) == 1
+                s=s+1;
+            end
+        end   
+    end   
+end
+if s >= s_0
+    cc=cc+1;
+end
+end
+% p(X,R) for basic jitter
+   pval(L)=(1+cc)/(K+1);
+
+if mod(L,200)==0
+         L
+binw=.01;
+subplot(1,2,1)
+hold off,
+histogram(pval,0:binw:1), title('p(X,R) basic jitter')
+hold on, plot(0:.005:1,binw*ones( size(0:.005:1)),'r-.')  % draw line
+pause(.001)
+
+subplot(1,2,2)
+hold off,
+cdfplot(pval)
+hold on
+plot(0:.005:1,0:.005:1,'r-.') % raw poiss approx. pvalues
+title('(a) Raw p-values (Poisson approximation method)')
+grid off
+pause(.001)
+
+end
+
+end
