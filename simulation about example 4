@@ -1,0 +1,45 @@
+clear all;
+T=1000;
+
+
+for L=1:1000
+n=randi([2,T-2],1,1);
+if n/2-round(n/2) == 0
+    s_0=1;
+else s_0=-1;
+end
+cc=0;
+for K=1:1000
+    n_jitter=n+randi(3,1,1)-2;
+    if n_jitter/2-round(n_jitter/2) == 0
+        s=1;
+    else s=-1;
+    end
+
+    if s >= s_0
+        cc=cc+1;
+    end
+end
+
+% p(X,R) for basic jitter
+   pval(L)=(1+cc)/(K+1);
+
+    if mod(L,200)==0
+         L
+        binw=.01;
+        subplot(1,2,1)
+        hold off,
+        histogram(pval,0:binw:1), title('p(X,R) basic jitter')
+        hold on, plot(0:.005:1,binw*ones( size(0:.005:1)),'r-.')  % draw line
+        pause(.001)
+
+        subplot(1,2,2)
+        hold off,
+        cdfplot(pval)
+        hold on
+        plot(0:.005:1,0:.005:1,'r-.') % raw poiss approx. pvalues
+        title('cumulative distribution of Raw p-values')
+        grid off
+        pause(.001)
+    end
+end
