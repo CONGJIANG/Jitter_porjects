@@ -106,11 +106,11 @@ for ccc=1:num_runs
 
             if(n1_jitt > T)
 
-                n1_jitt = n1_jitt - 1;
+                n1_jitt = n1_jitt - T;
 
             elseif(n1_jitt < 0)
 
-                n1_jitt = n1_jitt + 1;
+                n1_jitt = n1_jitt + T;
 
             end
 
@@ -158,11 +158,11 @@ for ccc=1:num_runs
 
             if(n1_jitt_int > T)
 
-                n1_jitt_int = n1_jitt_int - 1;
+                n1_jitt_int = n1_jitt_int - T;
 
             elseif(n1_jitt_int < 0)
 
-                n1_jitt_int = n1_jitt_int + 1;
+                n1_jitt_int = n1_jitt_int + T;
 
             end
 
