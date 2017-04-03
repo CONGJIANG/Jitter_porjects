@@ -1,0 +1,22 @@
+clear;
+clc;
+
+load('train_post-14.mat');
+L = length(postA);
+t0 = postA(1);
+tf = postA(1)+20000;
+number = ceil((postA(L)-postA(1))/20000);
+
+j = 1;
+count = zeros(1,number);
+for i=1:number
+    while (postA(j) >= t0 && postA(j) < tf)
+        count(i) = count(i)+1;
+        j = j+1;
+        if j > L
+            break;
+        end
+    end
+    t0 = tf;
+    tf = t0+20000;
+end
